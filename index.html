@@ -1,0 +1,538 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Vogue Vision | Alpine Morning</title>
+<style>
+    :root {
+        /* Фон черный/темный */
+        --bg-gradient: linear-gradient(135deg, #000000 0%, #1a1a1a 100%);
+        
+        /* Цвет карточек сероватый */
+        --card-bg: #2c2c2c;
+        
+        /* Цвет текста светлый для контраста */
+        --text-main: #e0e0e0;
+        --text-header: #ffffff;
+        
+        --accent: #a0a0a0;
+        --highlight: #d4a373;
+        --font-main: 'Optima', 'Segoe UI', Tahoma, sans-serif;
+    }
+
+    body, html {
+        margin: 0;
+        padding: 0;
+        background: var(--bg-gradient);
+        background-attachment: fixed;
+        color: var(--text-main);
+        font-family: var(--font-main);
+        overflow-x: hidden;
+    }
+
+    /* Холст для легкого эффекта тумана/снега */
+    #snow-canvas {
+        position: fixed;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 100%;
+        z-index: 0;
+        pointer-events: none;
+        opacity: 0.4;
+    }
+
+    .content-layer {
+        position: relative;
+        z-index: 1;
+        max-width: 1100px;
+        margin: 0 auto;
+        padding: 60px 20px;
+    }
+
+    /* === НОВАЯ СЕКЦИЯ: ИНФО И КОНТАКТЫ === */
+    .intro-section {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: 60px;
+        margin-bottom: 100px;
+        padding-bottom: 60px;
+        border-bottom: 1px solid rgba(255,255,255,0.1);
+    }
+
+    .intro-block h3 {
+        font-weight: 300;
+        font-size: 1.5rem;
+        text-transform: uppercase;
+        letter-spacing: 4px;
+        color: var(--text-header);
+        margin-bottom: 25px;
+        border-left: 2px solid var(--highlight);
+        padding-left: 15px;
+    }
+
+    .intro-block p, .intro-block li {
+        color: #bbb;
+        line-height: 1.8;
+        font-size: 0.95rem;
+    }
+
+    .intro-block ul {
+        list-style: none;
+        padding: 0;
+    }
+    
+    .intro-block li {
+        margin-bottom: 10px;
+    }
+
+    .intro-block strong {
+        color: var(--text-main);
+    }
+
+    /* Заголовки разделов */
+    .section-header {
+        text-align: center;
+        margin: 100px 0 60px 0;
+    }
+    
+    /* Убираем верхний отступ для первого заголовка после интро, если нужно */
+    .shop-header {
+        margin-top: 40px; 
+    }
+
+    h1 {
+        font-weight: 300;
+        letter-spacing: 8px;
+        text-transform: uppercase;
+        color: var(--text-header);
+        font-size: 2.5rem;
+        margin-bottom: 10px;
+    }
+
+    .subtitle {
+        font-size: 1rem;
+        letter-spacing: 2px;
+        color: var(--accent);
+        text-transform: lowercase;
+    }
+
+    /* === СТИЛИ ДЛЯ МАГАЗИНА (SHOP) === */
+    .shop-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+        gap: 40px;
+        margin-bottom: 150px; /* Отступ до архива */
+    }
+
+    .product-card {
+        background: var(--card-bg);
+        border: 1px solid rgba(255,255,255,0.05);
+        display: flex;
+        flex-direction: column;
+        transition: transform 0.3s ease, box-shadow 0.3s ease;
+        position: relative;
+    }
+
+    .product-card:hover {
+        transform: translateY(-10px);
+        box-shadow: 0 15px 30px rgba(0,0,0,0.4);
+    }
+
+    .product-img {
+        width: 100%;
+        height: 350px;
+        overflow: hidden;
+        position: relative;
+    }
+
+    .product-img img {
+        width: 100%;
+        height: 100%;
+        object-fit: cover;
+        transition: transform 0.5s ease;
+    }
+
+    .product-card:hover .product-img img {
+        transform: scale(1.05);
+    }
+
+    .product-details {
+        padding: 25px;
+        text-align: center;
+    }
+
+    .product-name {
+        font-size: 1.1rem;
+        color: var(--text-header);
+        margin-bottom: 10px;
+        text-transform: uppercase;
+        letter-spacing: 1px;
+    }
+
+    .product-price {
+        font-size: 1rem;
+        color: var(--highlight);
+        margin-bottom: 20px;
+        font-weight: bold;
+        font-family: monospace;
+    }
+
+    .btn-buy {
+        background: transparent;
+        border: 1px solid var(--text-main);
+        color: var(--text-main);
+        padding: 10px 30px;
+        font-family: var(--font-main);
+        text-transform: uppercase;
+        letter-spacing: 2px;
+        font-size: 0.7rem;
+        cursor: pointer;
+        transition: all 0.3s ease;
+    }
+
+    .btn-buy:hover {
+        background: var(--text-header);
+        color: #000;
+        border-color: var(--text-header);
+    }
+    
+    .badge-new {
+        position: absolute;
+        top: 10px;
+        left: 10px;
+        background: var(--highlight);
+        color: #000;
+        padding: 5px 10px;
+        font-size: 0.6rem;
+        text-transform: uppercase;
+        font-weight: bold;
+        letter-spacing: 1px;
+        z-index: 2;
+    }
+
+    /* === СЕТКА ИСТОРИИ (ARCHIVE) - теперь внизу === */
+    .catalog-grid {
+        display: grid;
+        grid-template-columns: 1fr;
+        gap: 80px;
+        border-top: 1px solid rgba(255,255,255,0.1);
+        padding-top: 80px;
+    }
+
+    .catalog-item {
+        display: flex;
+        flex-direction: row;
+        background: var(--card-bg);
+        border-radius: 2px;
+        overflow: hidden;
+        box-shadow: 0 20px 50px rgba(0,0,0,0.3);
+        transition: all 0.5s cubic-bezier(0.25, 0.46, 0.45, 0.94);
+    }
+
+    .catalog-item:nth-child(even) {
+        flex-direction: row-reverse;
+    }
+
+    .catalog-item:hover {
+        transform: scale(1.02);
+        box-shadow: 0 30px 60px rgba(0,0,0,0.5);
+    }
+
+    .photo-col {
+        flex: 1;
+        height: 550px;
+        overflow: hidden;
+    }
+
+    .photo-col img {
+        width: 100%;
+        height: 100%;
+        object-fit: cover;
+        transition: transform 1.5s ease;
+    }
+
+    .catalog-item:hover .photo-col img {
+        transform: scale(1.1);
+    }
+
+    .info-col {
+        flex: 1;
+        padding: 60px;
+        display: flex;
+        flex-direction: column;
+        justify-content: center;
+        background: var(--card-bg);
+    }
+
+    .year-badge {
+        font-size: 0.75rem;
+        color: var(--highlight);
+        font-weight: bold;
+        text-transform: uppercase;
+        margin-bottom: 15px;
+        letter-spacing: 3px;
+    }
+
+    h2 {
+        font-weight: 400;
+        font-size: 1.8rem;
+        margin: 0 0 25px 0;
+        color: var(--text-header);
+    }
+
+    p {
+        line-height: 1.8;
+        font-size: 0.95rem;
+        color: #bbb;
+        text-align: justify;
+    }
+
+    /* Адаптив */
+    @media (max-width: 850px) {
+        .intro-section {
+            grid-template-columns: 1fr;
+            gap: 40px;
+        }
+        .catalog-item, .catalog-item:nth-child(even) {
+            flex-direction: column;
+        }
+        .photo-col { height: 400px; }
+        .info-col { padding: 30px; }
+        .shop-grid {
+            grid-template-columns: 1fr;
+            padding: 0 40px;
+        }
+    }
+
+    .music-control {
+        position: fixed;
+        bottom: 30px;
+        left: 30px;
+        z-index: 100;
+        background: #2c2c2c;
+        border: 1px solid #444;
+        color: var(--text-header);
+        padding: 12px 20px;
+        cursor: pointer;
+        font-size: 10px;
+        letter-spacing: 2px;
+        text-transform: uppercase;
+        box-shadow: 0 5px 15px rgba(0,0,0,0.3);
+    }
+</style>
+</head>
+<body>
+
+<canvas id="snow-canvas"></canvas>
+
+<audio id="bgMusic" loop>
+    <source src="audio.mp3" type="audio/mpeg">
+</audio>
+<button class="music-control" id="musicBtn">Music: Off</button>
+
+<div class="content-layer">
+    
+    <div class="intro-section">
+        <div class="intro-block">
+            <h3>О нас</h3>
+            <p>
+                Мы — SALMINA'S GROUP. Наша миссия — объединять наследие высокой моды с современным цифровым искусством. 
+                Мы не просто продаем одежду, мы курируем стиль, вдохновленный историей, и создаем вещи, 
+                которые становятся артефактами в вашем гардеробе.
+            </p>
+            <p style="margin-top: 15px;">
+                Каждый предмет — это диалог между прошлым и будущим, между подиумом и улицей.
+            </p>
+        </div>
+        <div class="intro-block">
+            <h3>Контакты</h3>
+            <ul>
+                <li><strong>Адрес:</strong> Казахстан, г. Караганда, Гульдер-1, 1/2</li>
+                <li><strong>Телефон:</strong> +7 (777) 777-77-77</li>
+                <li><strong>Email:</strong> info@salminas.group</li>
+                <li><strong>Instagram:</strong> @salminas_archive</li>
+                <li><strong>Режим работы:</strong> Пн-Сб: 10:00 — 22:00</li>
+            </ul>
+        </div>
+    </div>
+
+
+    <div class="section-header shop-header">
+        <h1>Limited Drop</h1>
+        <div class="subtitle">Материализация идей</div>
+    </div>
+
+    <div class="shop-grid">
+        <div class="product-card">
+            <div class="badge-new">New Arrival</div>
+            <div class="product-img">
+                <img src="misha7.jpg" alt="Item 7">
+            </div>
+            <div class="product-details">
+                <div class="product-name">Basic Oversize T-Shirt</div>
+                <div class="product-price">5 200 тг</div>
+                <button class="btn-buy" onclick="addToCart('Basic Oversize T-Shirt')">В корзину</button>
+            </div>
+        </div>
+
+        <div class="product-card">
+            <div class="product-img">
+                <img src="misha8.jpg" alt="Item 8">
+            </div>
+            <div class="product-details">
+                <div class="product-name">Silk Noir T-Shirt</div>
+                <div class="product-price">5 200 тг</div>
+                <button class="btn-buy" onclick="addToCart('Silk Noir T-Shirt')">В корзину</button>
+            </div>
+        </div>
+
+        <div class="product-card">
+            <div class="product-img">
+                <img src="misha10.jpeg" alt="Item 9">
+            </div>
+            <div class="product-details">
+                <div class="product-name">Archive Coat</div>
+                <div class="product-price">5 200 тг</div>
+                <button class="btn-buy" onclick="addToCart('Archive Coat')">В корзину</button>
+            </div>
+        </div> 
+    </div>
+
+
+    <div class="section-header">
+        <h1>Archive Runway</h1>
+        <div class="subtitle">Кураторский взгляд на эволюцию подиумной эстетики</div>
+    </div>
+
+    <div class="catalog-grid">
+        <article class="catalog-item">
+            <div class="photo-col">
+                <img src="misha1.png" alt="Couture">
+            </div>
+            <div class="info-col">
+                <div class="year-badge">1947 — Возрождение</div>
+                <h2>The New Look</h2>
+                <p>Послевоенная мода требовала возвращения женственности. Кристиан Диор представил силуэт с подчеркнутой талией и пышной юбкой, на которую уходили десятки метров ткани. Это был бунт против дефицита и архитектурный триумф, изменивший облик Парижа навсегда.</p>
+            </div>
+        </article>
+
+        <article class="catalog-item">
+            <div class="photo-col">
+                <img src="misha2.png" alt="Space Age">
+            </div>
+            <div class="info-col">
+                <div class="year-badge">1960-е — Футуризм</div>
+                <h2>Космическая эра</h2>
+                <p>Пьер Карден и Андре Курреж перенесли подиум на орбиту. Винил, металл, шлемы и геометрические формы захватили воображение дизайнеров. Мода стала манифестом прогресса, заменяя привычный шелк на инновационный пластик и подчеркивая атлетизм нового поколения.</p>
+            </div>
+        </article>
+
+        <article class="catalog-item">
+            <div class="photo-col">
+                <img src="misha3.png" alt="80s Power Dressing">
+            </div>
+            <div class="info-col">
+                <div class="year-badge">1980-е — Власть</div>
+                <h2>Power Dressing</h2>
+                <p>Эпоха огромных подплечников и "мужских" силуэтов для женщин. Армани и Тьери Мюглер создавали броню для карьерного роста. Одежда стала инструментом доминирования в деловом мире, сочетая в себе агрессивный крой и бескомпромиссную роскошь материалов.</p>
+            </div>
+        </article>
+
+        <article class="catalog-item">
+            <div class="photo-col">
+                <img src="misha4.png" alt="90s Minimalism">
+            </div>
+            <div class="info-col">
+                <div class="year-badge">1990-е — Чистота</div>
+                <h2>Интеллектуальный шик</h2>
+                <p>Хельмут Ланг и Джил Зандер доказали, что отсутствие декора — это высшая форма стиля. Деконструкция, монохром и фокус на ткани. В это время мода заглянула внутрь себя, отказавшись от внешнего шума в пользу безупречного кроя и тихой уверенности.</p>
+            </div>
+        </article>
+
+        <article class="catalog-item">
+            <div class="photo-col">
+                <img src="misha5.png" alt="Avant-Garde">
+            </div>
+            <div class="info-col">
+                <div class="year-badge">2010-е — Эксперимент</div>
+                <h2>Театральный подиум</h2>
+                <p>Александр Маккуин и Джон Гальяно превратили показы в перформансы. Мода вышла за рамки одежды, став искусством на грани безумия. Каждое шоу — это история, полная драматизма, отсылок к истории и технологий, меняющих наше представление о красоте человеческого тела.</p>
+            </div>
+        </article>
+
+        <article class="catalog-item">
+            <div class="photo-col">
+                <img src="misha6.jpg" alt="Modern Fashion">
+            </div>
+            <div class="info-col">
+                <div class="year-badge">2025 — Настоящее</div>
+                <h2>Цифровая экология</h2>
+                <p>Современный подиум объединяет 3D-печать и переработанный океанический пластик. Дизайнеры сегодня работают над осознанным потреблением, где виртуальная одежда соседствует с вещами, способными служить десятилетиями. Это мода с совестью и высоким разрешением.</p>
+            </div>
+        </article>
+    </div>
+
+    <footer style="text-align: center; color: var(--accent); margin-top: 100px; font-size: 0.7rem; letter-spacing: 2px;">
+        © 2025 ARCHIVE RUNAWAY & SHOP — MADE BY SALMINA'S GROUP 
+    </footer>
+</div>
+
+<script>
+    // Эффект частиц
+    (function(){
+        const canvas = document.getElementById('snow-canvas');
+        const ctx = canvas.getContext('2d');
+        let W = canvas.width = window.innerWidth;
+        let H = canvas.height = window.innerHeight;
+
+        const particles = [];
+        for(let i = 0; i < 100; i++){
+            particles.push({
+                x: Math.random() * W,
+                y: Math.random() * H,
+                r: Math.random() * 3 + 1,
+                d: Math.random() * 0.5
+            });
+        }
+
+        function draw(){
+            ctx.clearRect(0, 0, W, H);
+            ctx.fillStyle = "rgba(255, 255, 255, 0.5)";
+            ctx.beginPath();
+            for(let p of particles){
+                ctx.moveTo(p.x, p.y);
+                ctx.arc(p.x, p.y, p.r, 0, Math.PI*2, true);
+                p.y += p.d;
+                if(p.y > H) p.y = -10;
+            }
+            ctx.fill();
+            requestAnimationFrame(draw);
+        }
+        draw();
+    })();
+
+    const musicBtn = document.getElementById('musicBtn');
+    const audio = document.getElementById('bgMusic');
+    let isPlaying = false;
+
+    musicBtn.addEventListener('click', () => {
+        if(!isPlaying){
+            audio.play();
+            musicBtn.textContent = "Music: On";
+            isPlaying = true;
+        } else {
+            audio.pause();
+            musicBtn.textContent = "Music: Off";
+            isPlaying = false;
+        }
+    });
+
+    // Логика корзины
+    function addToCart(itemName) {
+        alert("Товар добавлен в корзину: " + itemName);
+    }
+</script>
+</body>
+</html>
